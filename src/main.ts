@@ -17,4 +17,8 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   </div>
 `;
 
-(window as any).app=new App();
+App.initAsync().then(()=>{
+  (window as any).app=new App();
+}).catch((error)=>{
+  console.error(error);
+})
