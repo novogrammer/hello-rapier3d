@@ -85,9 +85,10 @@ export default class App{
         throw new Error("threeObjects is null");
       }
 
-      const {scene}=this.threeObjects;
+      const {scene,cube}=this.threeObjects;
 
       this.rapierPhysics.resetWorld();
+      cube.position.set(0,5,0);
       this.rapierPhysics.addScene(scene);
 
     });
