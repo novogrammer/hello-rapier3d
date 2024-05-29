@@ -3,22 +3,33 @@
 import * as THREE from 'three';
 
 import RAPIER from "@dimforge/rapier3d-compat"
+import { getElementSize } from './dom_utils';
 
 export default class App{
-  promiseSetup:Promise<void>
+  aboutElement:HTMLElement;
+  promiseSetup:Promise<void>;
   constructor(){
+    {
+      const aboutElement=document.querySelector<HTMLElement>(".p-section-about");
+      if(!aboutElement){
+        throw new Error("aboutElement is null");
+      }
+      this.aboutElement=aboutElement;
+    }
     this.promiseSetup=this.setupAsync();
     this.promiseSetup.catch((error)=>{
       console.error(error);
     });
   }
   async setupAsync():Promise<void>{
-    // シーン、カメラ、レンダラーの設定
+
+    const {width,height}=getElementSize(this.aboutElement);
+
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+    renderer.setSize(width, height);
+    this.aboutElement.appendChild(renderer.domElement);
 
     // ライトの追加
     const light = new THREE.DirectionalLight(0xffffff, 1);

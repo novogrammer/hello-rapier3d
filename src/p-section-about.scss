@@ -1,0 +1,13 @@
+@use "./global" as *;
+
+
+.p-section-about{
+  width:100%;
+
+  height:600px * $PX_TO_VW_SP;
+  @include mqpc(){
+    height:600px * $PX_TO_VW_PC;
+
+  }
+
+}
