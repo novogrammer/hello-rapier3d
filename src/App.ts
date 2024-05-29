@@ -6,6 +6,7 @@ import gsap from "gsap";
 import RAPIER from "@dimforge/rapier3d-compat"
 import { getElementSize } from './dom_utils';
 import { BREAK_WIDTH_PC, IS_DEBUG } from './constants';
+import RapierPhysics from './RapierPhysics';
 
 
 interface ThreeObjects{
@@ -14,15 +15,11 @@ interface ThreeObjects{
   camera:THREE.PerspectiveCamera;
   cube:THREE.Mesh;
 }
-interface RapierObjects{
-  world:RAPIER.World;
-  rigidBody:RAPIER.RigidBody;
-}
 
 export default class App{
   aboutElement:HTMLElement;
   threeObjects?:ThreeObjects;
-  rapierObjects?:RapierObjects;
+  rapierPhysics:RapierPhysics;
   constructor(){
     {
       const aboutElement=document.querySelector<HTMLElement>(".p-section-about");
@@ -31,6 +28,7 @@ export default class App{
       }
       this.aboutElement=aboutElement;
     }
+    this.rapierPhysics=new RapierPhysics(RAPIER,60);
     this.setupThree();
     this.setupGsap();
     this.setupEvents();
@@ -49,10 +47,14 @@ export default class App{
     light.position.set(5, 5, 5).normalize();
     scene.add(light);
 
-    const geometry = new THREE.BoxGeometry();
-    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    const cube = new THREE.Mesh(geometry, material);
-    scene.add(cube);
+    let cube:THREE.Mesh;
+    {
+      const geometry = new THREE.BoxGeometry();
+      const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+      cube = new THREE.Mesh(geometry, material);
+      cube.userData.physics = { mass: 1 };
+      scene.add(cube);
+    }
 
     camera.position.z = 5;
 
@@ -79,30 +81,26 @@ export default class App{
         console.log(`isPc: ${isPc}`);
       }
 
-      if(this.rapierObjects){
-        const {world}=this.rapierObjects;
-        world.free();
+      if(!this.threeObjects){
+        throw new Error("threeObjects is null");
       }
 
-      const gravity = { x: 0.0, y: -9.81, z: 0.0 };
-      const world = new RAPIER.World(gravity);
+      const {scene}=this.threeObjects;
 
-      const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic().setTranslation(0, 5, 0);
-      const rigidBody = world.createRigidBody(rigidBodyDesc);
+      this.rapierPhysics.resetWorld();
+      this.rapierPhysics.addScene(scene);
 
-      const colliderDesc = RAPIER.ColliderDesc.cuboid(0.5, 0.5, 0.5);
-      world.createCollider(colliderDesc, rigidBody);
-
-
-      this.rapierObjects={
-        world,
-        rigidBody,
-      }
     });
 
   }
 
   setupEvents():void{
+
+    window.addEventListener("resize",()=>{
+      this.onResize();
+    })
+    this.onResize();
+
     const that=this;
     function animate() {
       requestAnimationFrame(animate);
@@ -111,24 +109,30 @@ export default class App{
     animate();
 
   }
+  onResize():void{
+    if (!this.threeObjects) {
+      throw new Error("threeObjects is null");
+    }
+    const { renderer, camera } = this.threeObjects;
+
+    const {
+      width,
+      height,
+    } = getElementSize(this.aboutElement);
+
+    renderer.setSize(width, height);
+
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+
+  }
 
   onTick():void{
 
     if(!this.threeObjects){
       throw new Error("threeObjects is null");
     }
-    if(!this.rapierObjects){
-      throw new Error("rapierObjects is null");
-    }
-    const {cube,renderer,scene,camera}=this.threeObjects;
-    const {world,rigidBody}=this.rapierObjects;
-
-    world.step();
-
-    const position = rigidBody.translation();
-    const rotation = rigidBody.rotation();
-    cube.position.set(position.x, position.y, position.z);
-    cube.quaternion.set(rotation.x, rotation.y, rotation.z, rotation.w);
+    const {renderer,scene,camera}=this.threeObjects;
 
     renderer.render(scene, camera);
 
