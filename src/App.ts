@@ -244,11 +244,11 @@ export default class App{
       // length^(1/3)
       const l=Math.ceil(Math.pow(meshList.length,1/3));
       for(let iz=0;iz<l;iz++){
-        const z=(iz-l/2)*1;
+        const z=(iz-(l-1)/2)*1;
         for(let iy=0;iy<l;iy++){
-          const y=(iy-l/2)*1;
+          const y=(iy-(l-1)/2)*1;
           for(let ix=0;ix<l;ix++){
-            const x=(ix-l/2)*1;
+            const x=(ix-(l-1)/2)*1;
             const i=iz*l*l+iy*l+ix;
             if(i<meshList.length){
               const mesh=meshList[i];
