@@ -57,6 +57,17 @@ function createDynamicSphere():THREE.Mesh{
   return sphere;
 }
 
+function createWall(width:number,height:number,depth:number):THREE.Mesh{
+  const geometry = new THREE.BoxGeometry(width,height,depth);
+  const material = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    metalness:0,
+    roughness:1,
+  });
+  const wall = new THREE.Mesh(geometry, material);
+  wall.userData.physics = { mass: 0 };
+  return wall;
+}
 
 export default class App{
   aboutElement:HTMLElement;
@@ -110,84 +121,21 @@ export default class App{
         meshList.push(mesh);
         scene.add(mesh);
       }
-
-  
-  
     }
 
-    let wallTop:THREE.Mesh;
-    {
-      const geometry = new THREE.BoxGeometry(WALL_WIDTH,WALL_THICKNESS,WALL_LENGTH);
-      const material = new THREE.MeshStandardMaterial({
-        color: 0xffffff,
-        metalness:0,
-        roughness:1,
-      });
-      wallTop = new THREE.Mesh(geometry, material);
-      wallTop.userData.physics = { mass: 0 };
-      scene.add(wallTop);
-    }
-    let wallBottom:THREE.Mesh;
-    {
-      const geometry = new THREE.BoxGeometry(WALL_WIDTH,WALL_THICKNESS,WALL_LENGTH);
-      const material = new THREE.MeshStandardMaterial({
-        color: 0xffffff,
-        metalness:0,
-        roughness:1,
-      });
-      wallBottom = new THREE.Mesh(geometry, material);
-      wallBottom.userData.physics = { mass: 0 };
-      scene.add(wallBottom);
-    }
-    let wallFront:THREE.Mesh;
-    {
-      const geometry = new THREE.BoxGeometry(WALL_WIDTH,WALL_LENGTH,WALL_THICKNESS);
-      const material = new THREE.MeshStandardMaterial({
-        color: 0xffffff,
-        metalness:0,
-        roughness:1,
-      });
-      wallFront = new THREE.Mesh(geometry, material);
-      wallFront.visible=false;
-      wallFront.userData.physics = { mass: 0 };
-      scene.add(wallFront);
-    }
-    let wallBack:THREE.Mesh;
-    {
-      const geometry = new THREE.BoxGeometry(WALL_WIDTH,WALL_LENGTH,WALL_THICKNESS);
-      const material = new THREE.MeshStandardMaterial({
-        color: 0xffffff,
-        metalness:0,
-        roughness:1,
-      });
-      wallBack = new THREE.Mesh(geometry, material);
-      wallBack.userData.physics = { mass: 0 };
-      scene.add(wallBack);
-    }
-    let wallLeft:THREE.Mesh;
-    {
-      const geometry = new THREE.BoxGeometry(WALL_THICKNESS,WALL_LENGTH,WALL_LENGTH);
-      const material = new THREE.MeshStandardMaterial({
-        color: 0xffffff,
-        metalness:0,
-        roughness:1,
-      });
-      wallLeft = new THREE.Mesh(geometry, material);
-      wallLeft.userData.physics = { mass: 0 };
-      scene.add(wallLeft);
-    }
-    let wallRight:THREE.Mesh;
-    {
-      const geometry = new THREE.BoxGeometry(WALL_THICKNESS,WALL_LENGTH,WALL_LENGTH);
-      const material = new THREE.MeshStandardMaterial({
-        color: 0xffffff,
-        metalness:0,
-        roughness:1,
-      });
-      wallRight = new THREE.Mesh(geometry, material);
-      wallRight.userData.physics = { mass: 0 };
-      scene.add(wallRight);
-    }
+    const wallTop=createWall(WALL_WIDTH,WALL_THICKNESS,WALL_LENGTH);
+    scene.add(wallTop);
+    const wallBottom=createWall(WALL_WIDTH,WALL_THICKNESS,WALL_LENGTH);
+    scene.add(wallBottom);
+    const wallFront=createWall(WALL_WIDTH,WALL_LENGTH,WALL_THICKNESS);
+    wallFront.visible=false;
+    scene.add(wallFront);
+    const wallBack=createWall(WALL_WIDTH,WALL_LENGTH,WALL_THICKNESS);
+    scene.add(wallBack);
+    const wallLeft=createWall(WALL_THICKNESS,WALL_LENGTH,WALL_LENGTH);
+    scene.add(wallLeft);
+    const wallRight=createWall(WALL_THICKNESS,WALL_LENGTH,WALL_LENGTH);
+    scene.add(wallRight);
 
 
     this.threeObjects={
