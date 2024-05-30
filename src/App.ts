@@ -227,7 +227,7 @@ export default class App{
 
       }
       if(isPc){
-        
+
       }
 
       this.rapierPhysics.addScene(scene);
@@ -275,7 +275,17 @@ export default class App{
     if(!this.threeObjects){
       throw new Error("threeObjects is null");
     }
+    if(!this.rapierPhysics){
+      throw new Error("rapierPhysics is null");
+    }
+    const time=performance.now()*0.001;
+    this.rapierPhysics.world.bodies.forEach((body)=>{
+      body.wakeUp();
+    })
+    this.rapierPhysics.world.gravity.y=Math.sin(time*1)*9.8
+
     const {renderer,scene,camera}=this.threeObjects;
+
 
     renderer.render(scene, camera);
 
