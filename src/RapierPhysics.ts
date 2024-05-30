@@ -16,26 +16,26 @@ export default class RapierPhysics {
   RAPIER: TypeOfRAPIER;
   world: RAPIER.World;
   meshes: THREE.Mesh[] = [];
-  meshMap: WeakMap<THREE.Mesh, RAPIER.RigidBody|(RAPIER.RigidBody[])> = new WeakMap<THREE.Mesh, RAPIER.RigidBody|(RAPIER.RigidBody[])>();
-  fps:number;
+  meshMap: WeakMap<THREE.Mesh, RAPIER.RigidBody | (RAPIER.RigidBody[])> = new WeakMap<THREE.Mesh, RAPIER.RigidBody | (RAPIER.RigidBody[])>();
+  fps: number;
 
-  constructor(RAPIER: TypeOfRAPIER,fps:number) {
+  constructor(RAPIER: TypeOfRAPIER, fps: number) {
     this.RAPIER = RAPIER;
-    this.fps=fps;
+    this.fps = fps;
     this.world = new RAPIER.World(gravity);
 
-    setInterval(()=>{
+    setInterval(() => {
       this.step();
-    },1000/fps);
+    }, 1000 / fps);
   }
   resetWorld() {
     this.world.free();
     this.world = new this.RAPIER.World(gravity);
     this.meshes = [];
-    this.meshMap = new WeakMap<THREE.Mesh, RAPIER.RigidBody|(RAPIER.RigidBody[])>();
+    this.meshMap = new WeakMap<THREE.Mesh, RAPIER.RigidBody | (RAPIER.RigidBody[])>();
 
   }
-  getShape(geometry: THREE.BufferGeometry):RAPIER.ColliderDesc|null {
+  getShape(geometry: THREE.BufferGeometry): RAPIER.ColliderDesc | null {
 
     const parameters = (geometry as any).parameters;
 
@@ -60,7 +60,7 @@ export default class RapierPhysics {
 
   }
   addScene(scene: THREE.Scene) {
-    scene.traverse((child)=> {
+    scene.traverse((child) => {
 
       if (child instanceof THREE.Mesh && child.isMesh) {
 
@@ -77,147 +77,147 @@ export default class RapierPhysics {
     });
   }
 
-	addMesh( mesh:THREE.Mesh, mass = 0, restitution = 0 ) {
+  addMesh(mesh: THREE.Mesh, mass = 0, restitution = 0) {
 
-		const shape = this.getShape( mesh.geometry );
+    const shape = this.getShape(mesh.geometry);
 
-		if ( shape === null ) return;
+    if (shape === null) return;
 
-		shape.setMass( mass );
-		shape.setRestitution( restitution );
+    shape.setMass(mass);
+    shape.setRestitution(restitution);
 
-		const body = (mesh instanceof THREE.InstancedMesh &&(mesh as any).isInstancedMesh)
-							? this.createInstancedBody( mesh, mass, shape )
-							: this.createBody( mesh.position, mesh.quaternion, mass, shape );
+    const body = (mesh instanceof THREE.InstancedMesh && (mesh as any).isInstancedMesh)
+      ? this.createInstancedBody(mesh, mass, shape)
+      : this.createBody(mesh.position, mesh.quaternion, mass, shape);
 
-		if ( mass > 0 ) {
+    if (mass > 0) {
 
-			this.meshes.push( mesh );
-			this.meshMap.set( mesh, body );
+      this.meshes.push(mesh);
+      this.meshMap.set(mesh, body);
 
-		}
+    }
 
-	}
-	createInstancedBody( mesh:THREE.InstancedMesh, mass:number, shape:RAPIER.ColliderDesc ) {
+  }
+  createInstancedBody(mesh: THREE.InstancedMesh, mass: number, shape: RAPIER.ColliderDesc) {
 
-		const array = mesh.instanceMatrix.array;
+    const array = mesh.instanceMatrix.array;
 
-		const bodies = [];
+    const bodies = [];
 
-		for ( let i = 0; i < mesh.count; i ++ ) {
+    for (let i = 0; i < mesh.count; i++) {
 
-			const position = _vector.fromArray( array, i * 16 + 12 );
-			bodies.push( this.createBody( position , null, mass, shape ) );
+      const position = _vector.fromArray(array, i * 16 + 12);
+      bodies.push(this.createBody(position, null, mass, shape));
 
-		}
+    }
 
-		return bodies;
+    return bodies;
 
-	}
+  }
 
-	createBody( position:THREE.Vector3, quaternion:THREE.Quaternion|null, mass:number, shape:RAPIER.ColliderDesc ) {
+  createBody(position: THREE.Vector3, quaternion: THREE.Quaternion | null, mass: number, shape: RAPIER.ColliderDesc) {
 
-		const desc = mass > 0 ? this.RAPIER.RigidBodyDesc.dynamic() : this.RAPIER.RigidBodyDesc.fixed();
-		desc.setTranslation( ...(position as any as [number,number,number]) );
-		if ( quaternion !== null ) desc.setRotation( quaternion );
+    const desc = mass > 0 ? this.RAPIER.RigidBodyDesc.dynamic() : this.RAPIER.RigidBodyDesc.fixed();
+    desc.setTranslation(...(position as any as [number, number, number]));
+    if (quaternion !== null) desc.setRotation(quaternion);
 
-		const body = this.world.createRigidBody( desc );
-		this.world.createCollider( shape, body );
+    const body = this.world.createRigidBody(desc);
+    this.world.createCollider(shape, body);
 
-		return body;
+    return body;
 
-	}
+  }
 
-  setMeshPosition( mesh:THREE.Mesh, position:RAPIER.Vector, index = 0 ) {
+  setMeshPosition(mesh: THREE.Mesh, position: RAPIER.Vector, index = 0) {
 
-		let bodyOrBodies = this.meshMap.get( mesh );
-    if(!bodyOrBodies){
+    let bodyOrBodies = this.meshMap.get(mesh);
+    if (!bodyOrBodies) {
       throw new Error("bodyOrBodies is null");
     }
 
-    let body:RAPIER.RigidBody;
-    if(Array.isArray(bodyOrBodies)){
-      body = bodyOrBodies[ index ];
-    }else{
+    let body: RAPIER.RigidBody;
+    if (Array.isArray(bodyOrBodies)) {
+      body = bodyOrBodies[index];
+    } else {
       body = bodyOrBodies;
     }
 
-		body.setAngvel( ZERO ,false);
-		body.setLinvel( ZERO ,false);
-		body.setTranslation( position ,false);
+    body.setAngvel(ZERO, false);
+    body.setLinvel(ZERO, false);
+    body.setTranslation(position, false);
 
-	}
+  }
 
-	setMeshVelocity( mesh:THREE.Mesh, velocity:RAPIER.Vector, index = 0 ) {
+  setMeshVelocity(mesh: THREE.Mesh, velocity: RAPIER.Vector, index = 0) {
 
-		let bodyOrBodies = this.meshMap.get( mesh );
-    if(!bodyOrBodies){
+    let bodyOrBodies = this.meshMap.get(mesh);
+    if (!bodyOrBodies) {
       throw new Error("bodyOrBodies is null");
     }
 
-    let body:RAPIER.RigidBody;
-    if(Array.isArray(bodyOrBodies)){
-      body = bodyOrBodies[ index ];
-    }else{
+    let body: RAPIER.RigidBody;
+    if (Array.isArray(bodyOrBodies)) {
+      body = bodyOrBodies[index];
+    } else {
       body = bodyOrBodies;
     }
 
-		body.setLinvel( velocity ,false);
+    body.setLinvel(velocity, false);
 
-	}  
-  step(){
+  }
+  step() {
 
 
-		this.world.timestep = 1/this.fps;
-		this.world.step();
+    this.world.timestep = 1 / this.fps;
+    this.world.step();
 
-		//
+    //
 
-		for ( let i = 0, l = this.meshes.length; i < l; i ++ ) {
+    for (let i = 0, l = this.meshes.length; i < l; i++) {
 
-			const mesh = this.meshes[ i ];
+      const mesh = this.meshes[i];
 
-			if ( mesh instanceof THREE.InstancedMesh && mesh.isInstancedMesh ) {
+      if (mesh instanceof THREE.InstancedMesh && mesh.isInstancedMesh) {
 
-				const array = mesh.instanceMatrix.array;
-				const bodies = this.meshMap.get( mesh );
-        if(!bodies){
+        const array = mesh.instanceMatrix.array;
+        const bodies = this.meshMap.get(mesh);
+        if (!bodies) {
           throw new Error("bodies is null");
         }
-        if(!Array.isArray(bodies)){
+        if (!Array.isArray(bodies)) {
           throw new Error("bodies is not Array");
         }
 
-				for ( let j = 0; j < bodies.length; j ++ ) {
+        for (let j = 0; j < bodies.length; j++) {
 
-					const body = bodies[ j ];
+          const body = bodies[j];
 
-					const position = body.translation();
-					_quaternion.copy( body.rotation() );
+          const position = body.translation();
+          _quaternion.copy(body.rotation());
 
-					_matrix.compose( position as THREE.Vector3, _quaternion, _scale ).toArray( array, j * 16 );
+          _matrix.compose(position as THREE.Vector3, _quaternion, _scale).toArray(array, j * 16);
 
-				}
+        }
 
-				mesh.instanceMatrix.needsUpdate = true;
-				mesh.computeBoundingSphere();
+        mesh.instanceMatrix.needsUpdate = true;
+        mesh.computeBoundingSphere();
 
-			} else {
+      } else {
 
-				const body = this.meshMap.get( mesh );
-        if(!body){
+        const body = this.meshMap.get(mesh);
+        if (!body) {
           throw new Error("body is null");
         }
-        if(Array.isArray(body)){
+        if (Array.isArray(body)) {
           throw new Error("body is Array");
         }
 
-				mesh.position.copy( body.translation() );
-				mesh.quaternion.copy( body.rotation() );
+        mesh.position.copy(body.translation());
+        mesh.quaternion.copy(body.rotation());
 
-			}
+      }
 
-		}
+    }
 
   }
 
