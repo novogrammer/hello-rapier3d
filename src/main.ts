@@ -11,10 +11,8 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <section class="p-section-about">
   </section>
   <section class="p-section-footer">
+    <h2 class="p-section-footer__title">Footer</h2>
   </section>
-  <div>
-    Hello
-  </div>
 `;
 
 App.initAsync().then(()=>{
