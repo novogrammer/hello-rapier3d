@@ -2,6 +2,7 @@
 
 import * as THREE from 'three';
 import gsap from "gsap";
+import Stats from "stats-gl";
 
 import RAPIER from "@dimforge/rapier3d-compat"
 import { getElementSize } from './dom_utils';
@@ -77,6 +78,7 @@ export default class App{
   previousTime:number;
   previousScrollPositionY:number;
   previousScrollVelocityY:number;
+  stats?:Stats;
   constructor(){
     {
       const aboutElement=document.querySelector<HTMLElement>(".p-section-about");
@@ -90,6 +92,7 @@ export default class App{
     this.previousScrollPositionY=0;
     this.previousScrollVelocityY=0;
     this.setupThree();
+    this.setupStats();
     this.setupGsap();
     this.setupEvents();
   }
@@ -150,6 +153,16 @@ export default class App{
       wallLeft,
       wallRight,
     };
+
+  }
+  setupStats(){
+    if(!this.threeObjects){
+      throw new Error("threeObjects is null");
+    }
+    const {renderer}=this.threeObjects;
+    this.stats=new Stats();
+    this.stats.init( renderer );
+    document.body.appendChild( this.stats.dom );
 
   }
   setupGsap():void{
@@ -241,6 +254,9 @@ export default class App{
     const animate=()=> {
       requestAnimationFrame(animate);
       this.onTick();
+      if(this.stats){
+        this.stats.update();
+      }
     }
     animate();
 
