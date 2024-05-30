@@ -28,10 +28,21 @@ interface ThreeObjects{
   wallRight:THREE.Mesh;
 }
 
+function getTime(){
+  return performance.now()*0.001;
+}
+function getScrollPositionY(){
+  return window.scrollY;
+}
+
 export default class App{
   aboutElement:HTMLElement;
   threeObjects?:ThreeObjects;
   rapierPhysics:RapierPhysics;
+
+  previousTime:number;
+  previousScrollPositionY:number;
+  previousScrollVelocityY:number;
   constructor(){
     {
       const aboutElement=document.querySelector<HTMLElement>(".p-section-about");
@@ -41,6 +52,9 @@ export default class App{
       this.aboutElement=aboutElement;
     }
     this.rapierPhysics=new RapierPhysics(RAPIER,60);
+    this.previousTime=getTime();
+    this.previousScrollPositionY=0;
+    this.previousScrollVelocityY=0;
     this.setupThree();
     this.setupGsap();
     this.setupEvents();
@@ -209,6 +223,12 @@ export default class App{
       }=this.threeObjects;
 
       this.rapierPhysics.resetWorld();
+
+      this.previousTime=getTime();
+      this.previousScrollPositionY=getScrollPositionY();
+      this.previousScrollVelocityY=0;
+  
+
       sphere.position.set(0.1,1,0.1);
       cube.position.set(0,3,0);
       wallTop.position.set(0,WALL_LENGTH+WALL_THICKNESS*0.5,0);
@@ -244,10 +264,9 @@ export default class App{
     })
     this.onResize();
 
-    const that=this;
-    function animate() {
+    const animate=()=> {
       requestAnimationFrame(animate);
-      that.onTick();
+      this.onTick();
     }
     animate();
 
@@ -278,11 +297,41 @@ export default class App{
     if(!this.rapierPhysics){
       throw new Error("rapierPhysics is null");
     }
-    const time=performance.now()*0.001;
-    this.rapierPhysics.world.bodies.forEach((body)=>{
-      body.wakeUp();
-    })
-    this.rapierPhysics.world.gravity.y=Math.sin(time*1)*9.8
+
+    const time=getTime();
+    // 0割りを回避する
+    const deltaTime=Math.max(0.001,time-this.previousTime);
+    // console.log(`deltaTime: ${deltaTime}`);
+    if(0.1<=deltaTime){
+      const scrollPositionY=getScrollPositionY();
+      const scrollVelocityY=(scrollPositionY - this.previousScrollPositionY)/deltaTime;
+  
+      // console.log(`scrollVelocityY: ${scrollVelocityY}`);
+  
+      const scrollAccelerationY=(scrollVelocityY-this.previousScrollVelocityY)/deltaTime;
+  
+      // console.log(`scrollAccelerationY: ${scrollAccelerationY}`);
+  
+      const {height}=getElementSize(this.aboutElement);
+      // console.log(`height: ${height}`);
+      const px2m = WALL_LENGTH / height * -1;
+      // console.log(`px2m: ${px2m}`);
+      const scrollAccelerationYM=scrollAccelerationY*px2m;
+      // console.log(`scrollAccelerationYM: ${scrollAccelerationYM}`);
+  
+      this.previousTime=time;
+      this.previousScrollPositionY=scrollPositionY;
+      this.previousScrollVelocityY=scrollVelocityY;
+  
+      const gravityY=scrollAccelerationYM-9.8;
+      // const gravityY=scrollAccelerationYM;
+  
+      this.rapierPhysics.world.gravity.y=gravityY;
+      this.rapierPhysics.world.bodies.forEach((body)=>{
+        body.wakeUp();
+      })
+  
+    }
 
     const {renderer,scene,camera}=this.threeObjects;
 
