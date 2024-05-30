@@ -7,10 +7,12 @@ import RAPIER from "@dimforge/rapier3d-compat"
 import { getElementSize } from './dom_utils';
 import { BREAK_WIDTH_PC, IS_DEBUG } from './constants';
 import RapierPhysics from './RapierPhysics';
+import { calcCameraZ } from './three_utils';
 
 
 const WALL_THICKNESS=1;
 const WALL_LENGTH=5;
+const WALL_WIDTH=10;
 
 interface ThreeObjects{
   renderer:THREE.WebGLRenderer;
@@ -48,8 +50,7 @@ export default class App{
     const {width,height}=getElementSize(this.aboutElement);
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-    camera.position.z = 5;
+    const camera = new THREE.PerspectiveCamera(30, width / height, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer();
     renderer.setSize(width, height);
     this.aboutElement.appendChild(renderer.domElement);
@@ -87,7 +88,7 @@ export default class App{
     }
     let wallTop:THREE.Mesh;
     {
-      const geometry = new THREE.BoxGeometry(WALL_LENGTH,WALL_THICKNESS,WALL_LENGTH);
+      const geometry = new THREE.BoxGeometry(WALL_WIDTH,WALL_THICKNESS,WALL_LENGTH);
       const material = new THREE.MeshStandardMaterial({
         color: 0xffffff,
         metalness:0,
@@ -99,7 +100,7 @@ export default class App{
     }
     let wallBottom:THREE.Mesh;
     {
-      const geometry = new THREE.BoxGeometry(WALL_LENGTH,WALL_THICKNESS,WALL_LENGTH);
+      const geometry = new THREE.BoxGeometry(WALL_WIDTH,WALL_THICKNESS,WALL_LENGTH);
       const material = new THREE.MeshStandardMaterial({
         color: 0xffffff,
         metalness:0,
@@ -111,7 +112,7 @@ export default class App{
     }
     let wallFront:THREE.Mesh;
     {
-      const geometry = new THREE.BoxGeometry(WALL_LENGTH,WALL_LENGTH,WALL_THICKNESS);
+      const geometry = new THREE.BoxGeometry(WALL_WIDTH,WALL_LENGTH,WALL_THICKNESS);
       const material = new THREE.MeshStandardMaterial({
         color: 0xffffff,
         metalness:0,
@@ -124,7 +125,7 @@ export default class App{
     }
     let wallBack:THREE.Mesh;
     {
-      const geometry = new THREE.BoxGeometry(WALL_LENGTH,WALL_LENGTH,WALL_THICKNESS);
+      const geometry = new THREE.BoxGeometry(WALL_WIDTH,WALL_LENGTH,WALL_THICKNESS);
       const material = new THREE.MeshStandardMaterial({
         color: 0xffffff,
         metalness:0,
@@ -208,15 +209,19 @@ export default class App{
       }=this.threeObjects;
 
       this.rapierPhysics.resetWorld();
-      camera.position.set(0,2,5);
       sphere.position.set(0.1,1,0.1);
       cube.position.set(0,3,0);
       wallTop.position.set(0,WALL_LENGTH+WALL_THICKNESS*0.5,0);
       wallBottom.position.set(0,WALL_THICKNESS*-0.5,0);
       wallFront.position.set(0,WALL_LENGTH*0.5,WALL_LENGTH*0.5+WALL_THICKNESS*0.5);
       wallBack.position.set(0,WALL_LENGTH*0.5,WALL_LENGTH*-0.5+WALL_THICKNESS*-0.5);
-      wallLeft.position.set(WALL_LENGTH*-0.5+WALL_THICKNESS*-0.5,WALL_LENGTH*0.5,0);
-      wallRight.position.set(WALL_LENGTH*0.5+WALL_THICKNESS*0.5,WALL_LENGTH*0.5,0);
+
+      const cameraZ=calcCameraZ(WALL_LENGTH,camera.fov)+WALL_LENGTH*0.5;
+      const wallWidth=WALL_LENGTH*camera.aspect;
+
+      camera.position.set(0,2.5,cameraZ);
+      wallLeft.position.set(wallWidth*-0.5+WALL_THICKNESS*-0.5,WALL_LENGTH*0.5,0);
+      wallRight.position.set(wallWidth*0.5+WALL_THICKNESS*0.5,WALL_LENGTH*0.5,0);
 
       if(isSp){
 
