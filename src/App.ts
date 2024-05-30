@@ -18,8 +18,7 @@ interface ThreeObjects{
   renderer:THREE.WebGLRenderer;
   scene:THREE.Scene;
   camera:THREE.PerspectiveCamera;
-  cube:THREE.Mesh;
-  sphere:THREE.Mesh;
+  meshList:THREE.Mesh[];
   wallTop:THREE.Mesh;
   wallBottom:THREE.Mesh;
   wallFront:THREE.Mesh;
@@ -34,6 +33,30 @@ function getTime(){
 function getScrollPositionY(){
   return window.scrollY;
 }
+
+function createDynamicCube():THREE.Mesh{
+  const geometry = new THREE.BoxGeometry();
+  const material = new THREE.MeshStandardMaterial({
+    color: 0x00ff00,
+    metalness:0,
+    roughness:0.3,
+  });
+  const cube = new THREE.Mesh(geometry, material);
+  cube.userData.physics = { mass: 1 };
+  return cube;
+}
+function createDynamicSphere():THREE.Mesh{
+  const geometry = new THREE.IcosahedronGeometry(0.5,3);
+  const material = new THREE.MeshStandardMaterial({
+    color: 0x0000ff,
+    metalness:0,
+    roughness:0.3,
+  });
+  const sphere = new THREE.Mesh(geometry, material);
+  sphere.userData.physics = { mass: 1 };
+  return sphere;
+}
+
 
 export default class App{
   aboutElement:HTMLElement;
@@ -76,30 +99,22 @@ export default class App{
     directionalLight.position.set(2, 5, 10).normalize();
     scene.add(directionalLight);
 
-    let cube:THREE.Mesh;
-    {
-      const geometry = new THREE.BoxGeometry();
-      const material = new THREE.MeshStandardMaterial({
-        color: 0x00ff00,
-        metalness:0,
-        roughness:0.3,
-      });
-      cube = new THREE.Mesh(geometry, material);
-      cube.userData.physics = { mass: 1 };
-      scene.add(cube);
+    const meshList:THREE.Mesh[]=[];
+    for(let i=0;i<3*3*3;i++){
+      if(i%2==0){
+        const mesh=createDynamicCube();
+        meshList.push(mesh);
+        scene.add(mesh);
+      }else{
+        const mesh=createDynamicSphere();
+        meshList.push(mesh);
+        scene.add(mesh);
+      }
+
+  
+  
     }
-    let sphere:THREE.Mesh;
-    {
-      const geometry = new THREE.IcosahedronGeometry(0.5,3);
-      const material = new THREE.MeshStandardMaterial({
-        color: 0x0000ff,
-        metalness:0,
-        roughness:0.3,
-      });
-      sphere = new THREE.Mesh(geometry, material);
-      sphere.userData.physics = { mass: 1 };
-      scene.add(sphere);
-    }
+
     let wallTop:THREE.Mesh;
     {
       const geometry = new THREE.BoxGeometry(WALL_WIDTH,WALL_THICKNESS,WALL_LENGTH);
@@ -179,8 +194,7 @@ export default class App{
       renderer,
       scene,
       camera,
-      cube,
-      sphere,
+      meshList,
       wallTop,
       wallBottom,
       wallFront,
@@ -212,8 +226,7 @@ export default class App{
       const {
         scene,
         camera,
-        cube,
-        sphere,
+        meshList,
         wallTop,
         wallBottom,
         wallFront,
@@ -228,9 +241,22 @@ export default class App{
       this.previousScrollPositionY=getScrollPositionY();
       this.previousScrollVelocityY=0;
   
-
-      sphere.position.set(0.1,1,0.1);
-      cube.position.set(0,3,0);
+      // length^(1/3)
+      const l=Math.ceil(Math.pow(meshList.length,1/3));
+      for(let iz=0;iz<l;iz++){
+        const z=(iz-l/2)*1;
+        for(let iy=0;iy<l;iy++){
+          const y=(iy-l/2)*1;
+          for(let ix=0;ix<l;ix++){
+            const x=(ix-l/2)*1;
+            const i=iz*l*l+iy*l+ix;
+            if(i<meshList.length){
+              const mesh=meshList[i];
+              mesh.position.set(x,y+WALL_LENGTH*0.5,z);
+            }
+          }
+        }
+      }
       wallTop.position.set(0,WALL_LENGTH+WALL_THICKNESS*0.5,0);
       wallBottom.position.set(0,WALL_THICKNESS*-0.5,0);
       wallFront.position.set(0,WALL_LENGTH*0.5,WALL_LENGTH*0.5+WALL_THICKNESS*0.5);
