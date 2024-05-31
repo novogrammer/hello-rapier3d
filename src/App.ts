@@ -312,13 +312,13 @@ export default class App{
   onMotion(deviceMotionEvent:DeviceMotionEvent){
     if(deviceMotionEvent.accelerationIncludingGravity){
       if(deviceMotionEvent.accelerationIncludingGravity.x!==null){
-        this.gravity.x=deviceMotionEvent.accelerationIncludingGravity.x;
+        this.gravity.x=deviceMotionEvent.accelerationIncludingGravity.x*-1;
       }
       if(deviceMotionEvent.accelerationIncludingGravity.y!==null){
-        this.gravity.y=deviceMotionEvent.accelerationIncludingGravity.y;
+        this.gravity.y=deviceMotionEvent.accelerationIncludingGravity.y*-1;
       }
       if(deviceMotionEvent.accelerationIncludingGravity.z!==null){
-        this.gravity.z=deviceMotionEvent.accelerationIncludingGravity.z;
+        this.gravity.z=deviceMotionEvent.accelerationIncludingGravity.z*-1;
       }
       console.log(`this.gravity: ${this.gravity}`);
     }
