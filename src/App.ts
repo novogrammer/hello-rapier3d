@@ -1,6 +1,7 @@
 
 
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import gsap from "gsap";
 import Stats from "stats-gl";
 
@@ -80,6 +81,7 @@ export default class App{
   previousScrollVelocityY:number;
   stats?:Stats;
   gravity={x:0,y:-9.8,z:0};
+  static suzanneOriginal?:THREE.Mesh;
   constructor(){
     {
       const aboutElement=document.querySelector<HTMLElement>(".p-section-about");
@@ -116,14 +118,39 @@ export default class App{
 
     const meshList:THREE.Mesh[]=[];
     for(let i=0;i<3*3*3;i++){
-      if(i%2==0){
-        const mesh=createDynamicCube();
-        meshList.push(mesh);
-        scene.add(mesh);
-      }else{
-        const mesh=createDynamicSphere();
-        meshList.push(mesh);
-        scene.add(mesh);
+      switch(i%4){
+        case 0:
+          {
+            const mesh=createDynamicCube();
+            meshList.push(mesh);
+            scene.add(mesh);
+          }
+          break;
+        case 1:
+          {
+            const mesh=createDynamicSphere();
+            meshList.push(mesh);
+            scene.add(mesh);
+          }
+          break;
+        case 2:
+          {
+            if(!App.suzanneOriginal){
+              throw new Error("suzanneOriginal is null");
+            }
+            const mesh=App.suzanneOriginal.clone(true);
+            mesh.userData.physics={mass:1};
+            meshList.push(mesh);
+            scene.add(mesh);
+          }
+          break;
+        case 3:
+          {
+            const mesh=createDynamicSphere();
+            meshList.push(mesh);
+            scene.add(mesh);
+          }
+          break;
       }
     }
 
@@ -376,5 +403,13 @@ export default class App{
 
   static async initAsync():Promise<void>{
     await RAPIER.init();
+    const gltfLoader=new GLTFLoader();
+
+    const gltf= await gltfLoader.loadAsync("./suzanne-smooth.glb");
+    gltf.scene.traverse((object)=>{
+      if(object instanceof THREE.Mesh){
+        this.suzanneOriginal=object;
+      }
+    })
   }
 }

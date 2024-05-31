@@ -49,14 +49,16 @@ export default class RapierPhysics {
 
       return this.RAPIER.ColliderDesc.cuboid(sx, sy, sz);
 
-    } else if (geometry.type === 'SphereGeometry' || geometry.type === 'IcosahedronGeometry') {
+    } 
+    if (geometry.type === 'SphereGeometry' || geometry.type === 'IcosahedronGeometry') {
 
       const radius = parameters.radius !== undefined ? parameters.radius : 1;
       return this.RAPIER.ColliderDesc.ball(radius);
 
     }
 
-    return null;
+    // 他はConvexHullとして扱う
+    return this.RAPIER.ColliderDesc.convexHull(geometry.getAttribute("position").array as Float32Array);
 
   }
   addScene(scene: THREE.Scene) {
