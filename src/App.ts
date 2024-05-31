@@ -117,41 +117,34 @@ export default class App{
     scene.add(directionalLight);
 
     const meshList:THREE.Mesh[]=[];
-    for(let i=0;i<3*3*3;i++){
-      switch(i%4){
-        case 0:
-          {
-            const mesh=createDynamicCube();
-            meshList.push(mesh);
-            scene.add(mesh);
-          }
-          break;
-        case 1:
-          {
-            const mesh=createDynamicSphere();
-            meshList.push(mesh);
-            scene.add(mesh);
-          }
-          break;
-        case 2:
-          {
-            if(!App.suzanneOriginal){
-              throw new Error("suzanneOriginal is null");
-            }
-            const mesh=App.suzanneOriginal.clone(true);
-            mesh.userData.physics={mass:1};
-            meshList.push(mesh);
-            scene.add(mesh);
-          }
-          break;
-        case 3:
-          {
-            const mesh=createDynamicSphere();
-            meshList.push(mesh);
-            scene.add(mesh);
-          }
-          break;
+    const task01=()=>{
+      const mesh=createDynamicCube();
+      meshList.push(mesh);
+      scene.add(mesh);
+    };
+    const task02=()=>{
+      const mesh=createDynamicSphere();
+      meshList.push(mesh);
+      scene.add(mesh);
+    };
+    const task03=()=>{
+      if(!App.suzanneOriginal){
+        task01();
+        return;
       }
+      const mesh=App.suzanneOriginal.clone(true);
+      mesh.userData.physics={mass:1};
+      meshList.push(mesh);
+      scene.add(mesh);
+    }
+    const taskList=[
+      task01,
+      task02,
+      task03,
+      task02,
+    ];
+    for(let i=0;i<3*3*3;i++){
+      taskList[i%taskList.length]();
     }
 
     const wallTop=createWall(WALL_WIDTH,WALL_THICKNESS,WALL_LENGTH);
