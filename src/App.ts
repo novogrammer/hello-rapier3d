@@ -79,6 +79,7 @@ export default class App{
   previousScrollPositionY:number;
   previousScrollVelocityY:number;
   stats?:Stats;
+  gravity={x:0,y:-9.8,z:0};
   constructor(){
     {
       const aboutElement=document.querySelector<HTMLElement>(".p-section-about");
@@ -260,6 +261,36 @@ export default class App{
     }
     animate();
 
+    const addOnMotion=()=>{
+      window.addEventListener("devicemotion",(deviceMotionEvent)=>{
+        this.onMotion(deviceMotionEvent);
+      })
+    }
+    if(typeof (DeviceMotionEvent as any).requestPermission === 'function'){
+      this.setupRequestButton(addOnMotion);
+    }else{
+      addOnMotion();
+    }
+
+  }
+  setupRequestButton(addOnMotion:()=>void){
+    const button=document.createElement("button");
+    button.classList.add("p-section-about__button")
+    button.innerText="Request DeviceMotionEvent";
+    button.addEventListener("click",()=>{
+      const promiseRequestPermission:Promise<'granted'|'denied'>=(DeviceMotionEvent as any).requestPermission();
+      promiseRequestPermission.then((result)=>{
+        if(result=="granted"){
+          addOnMotion();
+        }
+        button.remove();
+      }).catch((error)=>{
+        console.error(error);
+      })
+  
+    });
+    this.aboutElement.appendChild(button);
+  
   }
   onResize():void{
     if (!this.threeObjects) {
@@ -277,6 +308,20 @@ export default class App{
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
 
+  }
+  onMotion(deviceMotionEvent:DeviceMotionEvent){
+    if(deviceMotionEvent.accelerationIncludingGravity){
+      if(deviceMotionEvent.accelerationIncludingGravity.x!==null){
+        this.gravity.x=deviceMotionEvent.accelerationIncludingGravity.x;
+      }
+      if(deviceMotionEvent.accelerationIncludingGravity.y!==null){
+        this.gravity.y=deviceMotionEvent.accelerationIncludingGravity.y;
+      }
+      if(deviceMotionEvent.accelerationIncludingGravity.z!==null){
+        this.gravity.z=deviceMotionEvent.accelerationIncludingGravity.z;
+      }
+      console.log(`this.gravity: ${this.gravity}`);
+    }
   }
 
   onTick():void{
@@ -313,10 +358,9 @@ export default class App{
       this.previousScrollPositionY=scrollPositionY;
       this.previousScrollVelocityY=scrollVelocityY;
   
-      const gravityY=scrollAccelerationYM-9.8;
-      // const gravityY=scrollAccelerationYM;
-  
-      this.rapierPhysics.world.gravity.y=gravityY;
+      this.rapierPhysics.world.gravity.x=this.gravity.x;  
+      this.rapierPhysics.world.gravity.y=scrollAccelerationYM+this.gravity.y;
+      this.rapierPhysics.world.gravity.z=this.gravity.z;  
       this.rapierPhysics.world.bodies.forEach((body)=>{
         body.wakeUp();
       })
