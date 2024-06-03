@@ -12,9 +12,11 @@ import RapierPhysics from './RapierPhysics';
 import { calcCameraZ } from './three_utils';
 
 
-const WALL_THICKNESS=1;
-const WALL_LENGTH=5;
-const WALL_WIDTH=10;
+const MAIN_SCALE=0.5;
+const WALL_THICKNESS=1*MAIN_SCALE;
+const WALL_LENGTH=5*MAIN_SCALE;
+const WALL_WIDTH=10*MAIN_SCALE;
+const BODY_SIZE=1*MAIN_SCALE;
 
 interface ThreeObjects{
   renderer:THREE.WebGLRenderer;
@@ -37,7 +39,7 @@ function getScrollPositionY(){
 }
 
 function createDynamicCube():THREE.Mesh{
-  const geometry = new THREE.BoxGeometry();
+  const geometry = new THREE.BoxGeometry(BODY_SIZE,BODY_SIZE,BODY_SIZE);
   const material = new THREE.MeshStandardMaterial({
     color: 0x00ff00,
     metalness:0,
@@ -48,7 +50,7 @@ function createDynamicCube():THREE.Mesh{
   return cube;
 }
 function createDynamicSphere():THREE.Mesh{
-  const geometry = new THREE.IcosahedronGeometry(0.5,3);
+  const geometry = new THREE.IcosahedronGeometry(BODY_SIZE*0.5,3);
   const material = new THREE.MeshStandardMaterial({
     color: 0x0000ff,
     metalness:0,
@@ -104,7 +106,7 @@ export default class App{
     const {width,height}=getElementSize(this.aboutElement);
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(30, width / height, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(30, width / height, 0.001, 1000);
     const renderer = new THREE.WebGLRenderer();
     renderer.setSize(width, height);
     this.aboutElement.appendChild(renderer.domElement);
@@ -226,11 +228,11 @@ export default class App{
       // length^(1/3)
       const l=Math.ceil(Math.pow(meshList.length,1/3));
       for(let iz=0;iz<l;iz++){
-        const z=(iz-(l-1)/2)*1;
+        const z=(iz-(l-1)/2)*BODY_SIZE;
         for(let iy=0;iy<l;iy++){
-          const y=(iy-(l-1)/2)*1;
+          const y=(iy-(l-1)/2)*BODY_SIZE;
           for(let ix=0;ix<l;ix++){
-            const x=(ix-(l-1)/2)*1;
+            const x=(ix-(l-1)/2)*BODY_SIZE;
             const i=iz*l*l+iy*l+ix;
             if(i<meshList.length){
               const mesh=meshList[i];
@@ -247,7 +249,7 @@ export default class App{
       const cameraZ=calcCameraZ(WALL_LENGTH,camera.fov)+WALL_LENGTH*0.5;
       const wallWidth=WALL_LENGTH*camera.aspect;
 
-      camera.position.set(0,2.5,cameraZ);
+      camera.position.set(0,WALL_LENGTH*0.5,cameraZ);
       wallLeft.position.set(wallWidth*-0.5+WALL_THICKNESS*-0.5,WALL_LENGTH*0.5,0);
       wallRight.position.set(wallWidth*0.5+WALL_THICKNESS*0.5,WALL_LENGTH*0.5,0);
 
@@ -401,6 +403,8 @@ export default class App{
     const gltf= await gltfLoader.loadAsync("./suzanne-smooth.glb");
     gltf.scene.traverse((object)=>{
       if(object instanceof THREE.Mesh){
+        const geometry=object.geometry as THREE.BufferGeometry;
+        geometry.scale(BODY_SIZE,BODY_SIZE,BODY_SIZE);
         this.suzanneOriginal=object;
       }
     })
